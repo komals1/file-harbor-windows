@@ -1,47 +1,23 @@
-import type { ForgeConfig } from '@electron-forge/shared-types';
+﻿import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
-import { MakerDMG } from '@electron-forge/maker-dmg';
-import { MakerDeb } from '@electron-forge/maker-deb';
-import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerZIP } from '@electron-forge/maker-zip';
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
-import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
-import { FuseV1Options, FuseVersion } from '@electron/fuses';
-import path from 'path';
-import fs from 'fs';
-
-function copyNativeModules(buildPath: string) {
-  const modules = ['better-sqlite3', 'bindings', 'file-uri-to-path'];
-  for (const mod of modules) {
-    const src = path.resolve(__dirname, 'node_modules', mod);
-    const dest = path.resolve(buildPath, 'node_modules', mod);
-    if (fs.existsSync(src)) {
-      fs.cpSync(src, dest, { recursive: true });
-    }
-  }
-}
+import { FuseVersion, FuseV1Options } from '@electron/fuses';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    name: 'File Harbor',
-    asar: {
-      unpack: '{**/better-sqlite3/**,**/bindings/**,**/file-uri-to-path/**}',
-    },
-    icon: path.resolve(__dirname, 'assets', 'icon'),
-    extraResource: ['./drizzle'],
-    ...(process.env.APPLE_ID ? { osxSign: {} } : {}),
-  },
-  hooks: {
-    packageAfterCopy: async (_config, buildPath) => {
-      copyNativeModules(buildPath);
-    },
+    asar: true,
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
-    new MakerDMG({}),
-    new MakerDeb({}),
-    new MakerRpm({}),
+    new MakerSquirrel({
+      name: 'file_harbor',
+      authors: 'Komal',
+      description: 'A local-first Windows document filing cabinet',
+    }),
+    new MakerZIP({}, ['win32']),
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),
@@ -71,7 +47,7 @@ const config: ForgeConfig = {
       [FuseV1Options.EnableCookieEncryption]: true,
       [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
-      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: false,
+      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
